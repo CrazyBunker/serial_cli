@@ -2,65 +2,37 @@
 import os
 import time
 import serial
+import ProcessorShell
 
 ser = serial.Serial( '/dev/ttyUSB0', 115200, timeout=0 )
-a=[]
-def hello_text():
-    ser.write(b'\n\r')
-    ser.write(b'python_test>')
-
-cursor = 0
-count_string_max = 0
-flag = 0
+sh = ProcessorShell.shell(ser)
+path = './root'
 while True:
-    s = ser.read()
-    if s:
+   cmd = sh.treatment()
+   if cmd == '?' or cmd =='help':
+       dir_lst = b' '.join([ i.encode('utf-8') for i in os.listdir(path=path+'/'+b'/'.join(sh.path).decode('utf-8'))])
+       print(dir_lst)
+       sh.print_string(dir_lst)
+   elif cmd == "..":
+       try:
+          del sh.path[-1]
+       except IndexError:
+           pass
+   else:
+       path_string = b'/'.join(sh.path).decode('utf-8')
+       sep = ''
+       if path_string:
+           sep = '/'
+       cmd_split = '/'.join(cmd.split())
+       if os.path.isdir(path+sep+path_string+'/'+cmd_split):
+           for i in cmd.split():
+               sh.path.append(i.encode('utf-8'))
+       else:
+           print(path+sep+path_string+'/'+cmd_split)
+           sh.print_string(b'Command: '+cmd.encode('utf-8'))
 
-        if s == b'\r':
-            hello_text()
-            cursor = 0
-            count_string_max = 0
-            #string = ''.join([i.decode("utf-8")  for i in a])
-            print(a)
-            del a[:]
-        elif s == b'\x1b':
-            flag = 1
-        elif flag == 1 and s == b'[':
-            flag += 1
-        elif flag == 2 and s == b'D':
-            flag = 0
-            cursor-=1
-            if cursor < 0:
-                cursor = 0
-                continue
-            ser.write(b'\x1b'+b'['+b'D')
-        elif flag == 2 and s == b'C':
-            flag = 0
-            cursor+=1
-            if cursor > count_string_max:
-                cursor = count_string_max
-                continue
-            ser.write(b'\x1b'+b'['+b'C')
-        elif s == b'\x08':
-            cursor-=1
-            if cursor < 0:
-                cursor = 0
-                continue
-            ser.write(b'\x1b' + b'[' + b'D')
-            ser.write(b'\x1b' + b'[' + b'P')
-            del a[-1]
-        elif flag == 2 and s == b'3':
-            flag = 3
-        elif flag == 3 and s == b'~':
-            flag = 0
-            count_string_max-=1
-            if count_string_max < 0:
-                count_string_max = 0
-                continue
-            ser.write(b'\x1b' + b'[' + b'P')
-            del a[cursor]
-        elif flag == 0:
-           a.append(s)
-           ser.write(s)
-           cursor +=1
-           count_string_max += 1
+   sh.hello_text()
+
+
+
+
