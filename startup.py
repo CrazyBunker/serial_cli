@@ -28,7 +28,14 @@ while True:
            for i in cmd.split():
                sh.path.append(i.encode('utf-8'))
        else:
-           print(path+sep+path_string+'/'+cmd_split)
+           cmd_string = path + sep + path_string + '/' + cmd_split
+           a = [path]
+           for i in cmd_string.split('/')[2:]:
+               if os.path.isfile(a[0]+'/'+i) or os.path.isdir(a[0]+'/'+i):
+                   a[0]+='/'+i
+               else:
+                   a.append(i)
+           print(a)
            sh.print_string(b'Command: '+cmd.encode('utf-8'))
 
    sh.hello_text()
