@@ -7,8 +7,12 @@ class shell():
         self.ser = ser
         self.hello_string = b'ProcessorShell:'
         self.path = []
-    def hello_text(self):
-        self.ser.write(b'\n\r')
+        self.history = []
+        self.__history_cursor__ = -1
+    def hello_text(self,enter=True):
+        if enter:
+            self.ser.write(b'\n')
+        self.ser.write(b'\r')
         self.ser.write(self.hello_string+b'/'.join(self.path)+b'>')
 
     def command_not_found(self,a):
@@ -16,6 +20,8 @@ class shell():
         [self.ser.write(i) for i in a]
     def print_string(self,string):
         self.ser.write(b'\n\r'+string)
+    def print_string_on_line(self,string):
+        self.ser.write(string)
     def treatment(self,hello=True):
         while True:
             s = self.ser.read()
@@ -31,6 +37,7 @@ class shell():
                 self.__count_string_max__ = 0
                 del self.__a__[:]
                 if string:
+                    self.history.append(string)
                     break
             elif s == b'\x1b':
                 self.__flag__ = 1
@@ -50,6 +57,28 @@ class shell():
                     self.__cursor__ = self.__count_string_max__
                     continue
                 self.ser.write(b'\x1b'+b'['+b'C')
+            elif self.__flag__ == 2 and s == b'A':
+                self.hello_text(enter=False)
+                try:
+                    print(self.history)
+                    history_string = self.history[self.__history_cursor__].encode('utf-8')
+                    self.print_string_on_line(history_string)
+                    self.__a__ = [history_string]
+                    self.__history_cursor__-=1
+                except IndexError:
+                    self.__history_cursor__ = len(self.history)
+                self.__flag__ = 0
+            elif self.__flag__ == 2 and s == b'B':
+                self.hello_text(enter=False)
+                try:
+                    print(self.history)
+                    history_string = self.history[self.__history_cursor__].encode('utf-8')
+                    self.print_string_on_line(history_string)
+                    self.__a__ = [history_string]
+                    self.__history_cursor__ += 1
+                except IndexError:
+                    self.__history_cursor__ = 1-len(self.history)
+                self.__flag__ = 0
             elif s == b'\x08':
                 self.__cursor__ -=1
                 if self.__cursor__  < 0:
