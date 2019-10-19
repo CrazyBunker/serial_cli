@@ -1,9 +1,8 @@
 #!/usr/bin/python
 import os
-import time
 import serial
 import ProcessorShell
-
+import subprocess
 ser = serial.Serial( '/dev/ttyUSB0', 115200, timeout=0 )
 sh = ProcessorShell.shell(ser)
 path = './root'
@@ -36,8 +35,8 @@ while True:
                else:
                    a.append(i)
            print(a)
-           sh.print_string(b'Command: '+cmd.encode('utf-8'))
-
+           stdout = subprocess.Popen(' '.join(a), shell=True, stdout=subprocess.PIPE).stdout.read().replace(b'\n',b'\n\r')
+           sh.print_string(stdout)
    sh.hello_text()
 
 

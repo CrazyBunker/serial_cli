@@ -22,7 +22,7 @@ class shell():
         self.ser.write(b'\n\r'+string)
     def print_string_on_line(self,string):
         self.ser.write(string)
-    def treatment(self,hello=True):
+    def treatment(self):
         while True:
             s = self.ser.read()
             if s == b'\r':
@@ -58,26 +58,26 @@ class shell():
                     continue
                 self.ser.write(b'\x1b'+b'['+b'C')
             elif self.__flag__ == 2 and s == b'A':
+                self.ser.write(b'\x1b'+b'[2K')
                 self.hello_text(enter=False)
                 try:
-                    print(self.history)
                     history_string = self.history[self.__history_cursor__].encode('utf-8')
                     self.print_string_on_line(history_string)
                     self.__a__ = [history_string]
                     self.__history_cursor__-=1
                 except IndexError:
-                    self.__history_cursor__ = len(self.history)
+                    self.__history_cursor__ = 1-len(self.history)
                 self.__flag__ = 0
             elif self.__flag__ == 2 and s == b'B':
+                self.ser.write(b'\x1b' + b'[2K')
                 self.hello_text(enter=False)
                 try:
-                    print(self.history)
                     history_string = self.history[self.__history_cursor__].encode('utf-8')
                     self.print_string_on_line(history_string)
                     self.__a__ = [history_string]
                     self.__history_cursor__ += 1
                 except IndexError:
-                    self.__history_cursor__ = 1-len(self.history)
+                    self.__history_cursor__ = len(self.history)
                 self.__flag__ = 0
             elif s == b'\x08':
                 self.__cursor__ -=1
