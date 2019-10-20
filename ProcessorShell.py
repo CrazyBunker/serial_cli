@@ -61,9 +61,10 @@ class shell():
                 self.ser.write(b'\x1b'+b'[2K')
                 self.hello_text(enter=False)
                 try:
-                    history_string = self.history[self.__history_cursor__].encode('utf-8')
-                    self.print_string_on_line(history_string)
-                    self.__a__ = [history_string]
+                    history_string = self.history[self.__history_cursor__]
+                    self.print_string_on_line(history_string.encode('utf-8'))
+                    self.__cursor__ = len(history_string)
+                    self.__a__ = [i.encode('utf-8') for i in history_string]
                     self.__history_cursor__-=1
                 except IndexError:
                     self.__history_cursor__ = 1-len(self.history)
@@ -72,26 +73,30 @@ class shell():
                 self.ser.write(b'\x1b' + b'[2K')
                 self.hello_text(enter=False)
                 try:
-                    history_string = self.history[self.__history_cursor__].encode('utf-8')
-                    self.print_string_on_line(history_string)
-                    self.__a__ = [history_string]
+                    history_string = self.history[self.__history_cursor__]
+                    self.print_string_on_line(history_string.encode('utf-8'))
+                    self.__cursor__ = len(history_string)
+                    self.__a__ = [i.encode('utf-8') for i in history_string]
                     self.__history_cursor__ += 1
                 except IndexError:
                     self.__history_cursor__ = len(self.history)
                 self.__flag__ = 0
             elif s == b'\x08':
+                try:
+                    del self.__a__[-1]
+                except IndexError:
+                    continue
                 self.__cursor__ -=1
                 if self.__cursor__  < 0:
                     self.__cursor__ = 0
                 self.ser.write(b'\x1b' + b'[' + b'D')
                 self.ser.write(b'\x1b' + b'[' + b'P')
-                del self.__a__[-1]
             elif self.__flag__ == 2 and s == b'3':
                 self.__flag__ = 3
             elif self.__flag__ == 3 and s == b'~':
                 self.__flag__ = 0
                 self.__count_string_max__-=1
-                if self.__count_string_max__ < 0:
+                if self.__count_string_max__ <= 0:
                     self.__count_string_max__ = 0
                     continue
                 self.ser.write(b'\x1b' + b'[' + b'P')

@@ -3,6 +3,7 @@ import os
 import serial
 import ProcessorShell
 import subprocess
+import re
 ser = serial.Serial( '/dev/ttyUSB0', 115200, timeout=0 )
 sh = ProcessorShell.shell(ser)
 path = './root'
@@ -34,8 +35,11 @@ while True:
                    a[0]+='/'+i
                else:
                    a.append(i)
-           print(a)
-           stdout = subprocess.Popen(' '.join(a), shell=True, stdout=subprocess.PIPE).stdout.read().replace(b'\n',b'\n\r')
+           std = subprocess.Popen(' '.join(a), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+           stdout = std.stdout.read().replace(b'\n',b'\n\r')
+           if re.match(r"\/bin\/sh: 1: [\/]*.*:.*Permission denied",stdout.decode('utf-8')):
+               stdout = 'Command '+' '.join(a)+' not found'
+               stdout = stdout.replace(path,'').encode('utf-8')
            sh.print_string(stdout)
    sh.hello_text()
 
